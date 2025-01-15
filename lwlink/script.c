@@ -373,7 +373,7 @@ void setup_script()
 		{
 			// stack size for targets that support it
 			// parse the hex number and stow it
-			linkscript.padsize = strtol(ptr, NULL, 16);
+			linkscript.stacksize = strtol(ptr, NULL, 16);
 			if (linkscript.stacksize < 0)
 				linkscript.stacksize = 0x100;
 		}
