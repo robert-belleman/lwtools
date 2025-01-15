@@ -26,6 +26,7 @@ Actually output the binary
 #include <string.h>
 
 #include "lwlink.h"
+#include "lw_alloc.h"
 
 // this prevents warnings about not using the return value of fwrite()
 // and, theoretically, can be replaced with a function that handles things
@@ -157,6 +158,32 @@ void do_output_raw(FILE *of)
 {
 	int sn;
 
+	if (linkscript.padsize > 0)
+	{
+		// create a memory block the size of the padding
+		void *p = lw_alloc(linkscript.padsize);
+		memset(p, 0, linkscript.padsize); // clear the block
+		fprintf(stderr, "entry at %04x\n", linkscript.execaddr);
+
+		// copy all sections into the padding block
+		for (sn = 0; sn < nsects; sn++)
+		{
+			// print section info for debugging
+			fprintf(stderr, "Section %d: %s, %d bytes at %04x\n", sn, sectlist[sn].ptr -> name, sectlist[sn].ptr -> codesize, sectlist[sn].ptr -> loadaddress);
+			if (sectlist[sn].ptr -> flags & SECTION_BSS)
+			{
+				// no output for a BSS section
+				continue;
+			}
+			fprintf(stderr, "Copying %d bytes to %04x\n", sectlist[sn].ptr -> codesize, sectlist[sn].ptr -> loadaddress - linkscript.execaddr);
+			memcpy(p + sectlist[sn].ptr -> loadaddress - linkscript.execaddr, sectlist[sn].ptr -> code, sectlist[sn].ptr -> codesize);
+		}
+
+		// write the padding block to the output file
+		writebytes(p, 1, linkscript.padsize, of);
+		free(p);
+	}
+	else
 	
 	for (sn = 0; sn < nsects; sn++)
 	{
